@@ -23,5 +23,6 @@ N26 password: ********
 ```
 You can run `n26 help` for usage description.
 
-# TODO
+# Missing features
 - Block/unblock cards
+- ?
