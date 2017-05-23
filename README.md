@@ -1,4 +1,4 @@
-# n26-cli
+# n26
 CLI to get information of your N26 account
 
 # Installation
@@ -22,3 +22,6 @@ N26 password: ********
 }
 ```
 You can run `n26 help` for usage description.
+
+# TODO
+- Block/unblock cards
