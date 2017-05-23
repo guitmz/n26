@@ -2,7 +2,8 @@
 CLI to get information of your N26 account
 
 # Installation
-You can manually build this project or download a binary release.
+- macOS: Available via Homebrew. Just run `brew install guitmz/tools/n26`
+- Linux: You can manually build this project or download a binary release.
 
 # Usage
 Make sure you have the `N26_USERNAME` environment variable set to your N26 user email.
