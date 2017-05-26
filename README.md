@@ -39,6 +39,7 @@ GLOBAL OPTIONS:
 You can have the `N26_USERNAME` and `N26_PASSWORD` environment variables set to your N26 user email and password. If you don't, you will be prompt for this information, so it's not mandatory.
 Example of getting your account balance:
 ```
+$ n26 balance
 +------------------------+-------------+-------------------+----------------+
 |          IBAN          |     BIC     | AVAILABLE BALANCE | USABLE BALANCE |
 +------------------------+-------------+-------------------+----------------+
