@@ -1,6 +1,20 @@
 package main
 
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
+	"strings"
+)
+
 const apiURL = "https://api.tech26.de"
+
+type Auth struct {
+	UserName string
+	Password string
+}
 
 type Balance struct {
 	AvailableBalance float64 `json:"availableBalance"`
@@ -169,4 +183,151 @@ type Statements []struct {
 	VisibleTS int64  `json:"visibleTS"`
 	Month     int    `json:"month"`
 	Year      int    `json:"year"`
+}
+
+func (auth Auth) requestToken() string {
+	token := &Token{}
+	data := url.Values{}
+	data.Set("grant_type", "password")
+	data.Add("username", auth.UserName)
+	data.Add("password", auth.Password)
+
+	u, _ := url.ParseRequestURI(apiURL)
+	u.Path = "/oauth/token"
+	urlStr := fmt.Sprintf("%v", u)
+
+	req, _ := http.NewRequest("POST", urlStr, strings.NewReader(data.Encode()))
+	req.Header.Add("Authorization", "Basic YW5kcm9pZDpzZWNyZXQ=")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	res, err := http.DefaultClient.Do(req)
+	check(err)
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+	check(json.Unmarshal(body, token))
+
+	return token.AccessToken
+}
+
+func (auth Auth) n26Request(endpoint string) []byte {
+	u, _ := url.ParseRequestURI(apiURL)
+	u.Path = endpoint
+	urlStr := fmt.Sprintf("%v", u)
+
+	req, _ := http.NewRequest("GET", urlStr, nil)
+	req.Header.Add("Authorization", "bearer "+auth.requestToken())
+
+	res, _ := http.DefaultClient.Do(req)
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	return body
+}
+
+func (auth Auth) getBalance(retType string) (string, *Balance) {
+	body := auth.n26Request("/api/accounts")
+	balance := &Balance{}
+	check(json.Unmarshal(body, &balance))
+	identedJSON, _ := json.MarshalIndent(&balance, "", "  ")
+	if retType == "json" {
+		return string(identedJSON), balance
+	}
+	return "", balance
+}
+
+func (auth Auth) getInfo(retType string) (string, *PersonalInfo) {
+	body := auth.n26Request("/api/me")
+	info := &PersonalInfo{}
+	check(json.Unmarshal(body, &info))
+	identedJSON, _ := json.MarshalIndent(&info, "", "  ")
+	if retType == "json" {
+		return string(identedJSON), info
+	}
+	return "", info
+}
+
+func (auth Auth) getStatus(retType string) (string, *Statuses) {
+	body := auth.n26Request("/api/me/statuses")
+	status := &Statuses{}
+	check(json.Unmarshal(body, &status))
+	identedJSON, _ := json.MarshalIndent(&status, "", "  ")
+	if retType == "json" {
+		return string(identedJSON), status
+	}
+	return "", status
+}
+
+func (auth Auth) getAddresses(retType string) (string, *Addresses) {
+	body := auth.n26Request("/api/addresses")
+	addresses := &Addresses{}
+	check(json.Unmarshal(body, &addresses))
+	identedJSON, _ := json.MarshalIndent(&addresses, "", "  ")
+	if retType == "json" {
+		return string(identedJSON), addresses
+	}
+	return "", addresses
+}
+
+func (auth Auth) getCards(retType string) (string, *Cards) {
+	body := auth.n26Request("/api/v2/cards")
+	cards := &Cards{}
+	check(json.Unmarshal(body, &cards))
+	identedJSON, _ := json.MarshalIndent(&cards, "", "  ")
+	if retType == "json" {
+		return string(identedJSON), cards
+	}
+	return "", cards
+}
+
+func (auth Auth) getLimits(retType string) (string, *Limits) {
+	body := auth.n26Request("/api/settings/account/limits")
+	limits := &Limits{}
+	check(json.Unmarshal(body, &limits))
+	identedJSON, _ := json.MarshalIndent(&limits, "", "  ")
+	if retType == "json" {
+		return string(identedJSON), limits
+	}
+	return "", limits
+}
+
+func (auth Auth) getContacts(retType string) (string, *Contacts) {
+	body := auth.n26Request("/api/smrt/contacts")
+	contacts := &Contacts{}
+	check(json.Unmarshal(body, &contacts))
+	identedJSON, _ := json.MarshalIndent(&contacts, "", "  ")
+	if retType == "json" {
+		return string(identedJSON), contacts
+	}
+	return "", contacts
+}
+
+func (auth Auth) getTransactions(retType string) (string, *Transactions) {
+	body := auth.n26Request("/api/smrt/transactions")
+	transactions := &Transactions{}
+	check(json.Unmarshal(body, &transactions))
+	identedJSON, _ := json.MarshalIndent(&transactions, "", "  ")
+	if retType == "json" {
+		return string(identedJSON), transactions
+	}
+	return "", transactions
+}
+
+func (auth Auth) getStatements(retType string) (string, *Statements) {
+	body := auth.n26Request("/api/statements")
+	statements := &Statements{}
+	check(json.Unmarshal(body, &statements))
+	identedJSON, _ := json.MarshalIndent(&statements, "", "  ")
+	if retType == "json" {
+		return string(identedJSON), statements
+	}
+	return "", statements
+}
+
+func (auth Auth) getStatementPDF(ID string) {
+	body := auth.n26Request(fmt.Sprintf("%s%s", "/api/statements/", ID))
+	ioutil.WriteFile(
+		fmt.Sprintf("%s.pdf", ID),
+		body,
+		0750,
+	)
 }
