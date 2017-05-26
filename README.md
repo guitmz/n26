@@ -6,10 +6,19 @@ CLI to get information of your N26 account
 - Linux: You can manually build this project or download a binary release.
 
 # Usage
-Make sure you have the `N26_USERNAME` environment variable set to your N26 user email.
+You can have the `N26_USERNAME` and `N26_PASSWORD` environment variables set to your N26 user email and password. If you don't, you will be prompt for this information, so it's not mandatory.
 Example of getting your account balance:
 ```
-$ n26 balance
++------------------------+-------------+-------------------+----------------+
+|          IBAN          |     BIC     | AVAILABLE BALANCE | USABLE BALANCE |
++------------------------+-------------+-------------------+----------------+
+| DE74100XXXXXXXXXXXXXXX | NTSXXXXXXXX |              88.8 |           88.8 |
++------------------------+-------------+-------------------+----------------+
+```
+
+You can also use the `json` option to output it as JSON with more information:
+```
+$ n26 balance json
 N26 password: ********
 {
   "availableBalance": 107.5,
