@@ -13,7 +13,7 @@ NAME:
    N26 - your N26 Bank financial information on the command line
 
 USAGE:
-   n26 command [json]
+   n26 command [json|statement ID]
 
 VERSION:
    1.1.0
@@ -22,18 +22,20 @@ AUTHOR:
    Guilherme Thomazi <thomazi@linux.com>
 
 COMMANDS:
-     addresses  addresses linked to your account
-     balance    your balance information
-     cards      list your cards information
-     contacts   your saved contacts
-     info       personal information
-     limits     your account limits
-     status     general status of your account
-     help, h    Shows a list of commands or help for one command
+     addresses     addresses linked to your account
+     balance       your balance information
+     cards         list your cards information
+     contacts      your saved contacts
+     info          personal information
+     limits        your account limits
+     statements    your statements
+     status        general status of your account
+     transactions  your past transactions
+     help, h       Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --help, -h     show help
-   --version, -v  print the version
+   --version, -v  print the version
 ```
 
 You can have the `N26_USERNAME` and `N26_PASSWORD` environment variables set to your N26 user email and password. If you don't, you will be prompt for this information, so it's not mandatory.
