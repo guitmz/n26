@@ -232,18 +232,30 @@ func main() {
 					data := [][]string{}
 					for _, transaction := range *transactions {
 						amount := strconv.FormatFloat(transaction.Amount, 'f', -1, 64)
+						var location string
+						if transaction.MerchantCity != "" {
+							location = transaction.MerchantCity
+							if transaction.MerchantCountry != 0 {
+								location += ", "
+							}
+						}
+						if transaction.MerchantCountry != 0 {
+							location += "Country Code: " + fmt.Sprint(transaction.MerchantCountry)
+						}
 						data = append(data,
 							[]string{
 								transaction.PartnerName,
 								transaction.PartnerIban,
 								transaction.PartnerBic,
+								transaction.MerchantName,
+								location,
 								amount,
 								transaction.CurrencyCode,
 								transaction.Type,
 							},
 						)
 					}
-					table.SetHeader([]string{"Name", "IBAN", "BIC", "Amount", "Currency", "Type"})
+					table.SetHeader([]string{"Name", "IBAN", "BIC", "Merchant", "Location", "Amount", "Currency", "Type"})
 					table.AppendBulk(data)
 					table.Render()
 				}
