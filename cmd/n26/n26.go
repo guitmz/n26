@@ -9,6 +9,7 @@ import (
 
 	"regexp"
 
+	"github.com/guitmz/n26"
 	"github.com/howeyc/gopass"
 	"github.com/olekukonko/tablewriter"
 	"github.com/urfave/cli"
@@ -20,7 +21,7 @@ func check(e error) {
 	}
 }
 
-func authentication() *Auth {
+func authentication() *n26.Auth {
 	username := os.Getenv("N26_USERNAME")
 	if username == "" {
 		fmt.Print("N26 username: ")
@@ -33,7 +34,7 @@ func authentication() *Auth {
 		check(err)
 		password = string(maskedPass)
 	}
-	return &Auth{username, password}
+	return &n26.Auth{username, password}
 }
 
 func main() {
@@ -51,7 +52,7 @@ func main() {
 			Usage: "your balance information",
 			Action: func(c *cli.Context) error {
 				API := authentication()
-				prettyJSON, balance := API.getBalance(c.Args().First())
+				prettyJSON, balance := API.GetBalance(c.Args().First())
 				if prettyJSON != "" {
 					fmt.Println(prettyJSON)
 				} else {
@@ -70,7 +71,7 @@ func main() {
 			Usage: "personal information",
 			Action: func(c *cli.Context) error {
 				API := authentication()
-				prettyJSON, info := API.getInfo(c.Args().First())
+				prettyJSON, info := API.GetInfo(c.Args().First())
 				if prettyJSON != "" {
 					fmt.Println(prettyJSON)
 				} else {
@@ -87,7 +88,7 @@ func main() {
 			Usage: "general status of your account",
 			Action: func(c *cli.Context) error {
 				API := authentication()
-				prettyJSON, status := API.getStatus(c.Args().First())
+				prettyJSON, status := API.GetStatus(c.Args().First())
 				if prettyJSON != "" {
 					fmt.Println(prettyJSON)
 				} else {
@@ -108,7 +109,7 @@ func main() {
 			Usage: "addresses linked to your account",
 			Action: func(c *cli.Context) error {
 				API := authentication()
-				prettyJSON, addresses := API.getAddresses(c.Args().First())
+				prettyJSON, addresses := API.GetAddresses(c.Args().First())
 				if prettyJSON != "" {
 					fmt.Println(prettyJSON)
 				} else {
@@ -144,7 +145,7 @@ func main() {
 			Usage: "list your cards information",
 			Action: func(c *cli.Context) error {
 				API := authentication()
-				prettyJSON, cards := API.getCards(c.Args().First())
+				prettyJSON, cards := API.GetCards(c.Args().First())
 				if prettyJSON != "" {
 					fmt.Println(prettyJSON)
 				} else {
@@ -171,7 +172,7 @@ func main() {
 			Usage: "your account limits",
 			Action: func(c *cli.Context) error {
 				API := authentication()
-				prettyJSON, limits := API.getLimits(c.Args().First())
+				prettyJSON, limits := API.GetLimits(c.Args().First())
 				if prettyJSON != "" {
 					fmt.Println(prettyJSON)
 				} else {
@@ -197,7 +198,7 @@ func main() {
 			Usage: "your saved contacts",
 			Action: func(c *cli.Context) error {
 				API := authentication()
-				prettyJSON, contacts := API.getContacts(c.Args().First())
+				prettyJSON, contacts := API.GetContacts(c.Args().First())
 				if prettyJSON != "" {
 					fmt.Println(prettyJSON)
 				} else {
@@ -224,7 +225,7 @@ func main() {
 			Usage: "your past transactions",
 			Action: func(c *cli.Context) error {
 				API := authentication()
-				prettyJSON, transactions := API.getTransactions(c.Args().First())
+				prettyJSON, transactions := API.GetTransactions(c.Args().First())
 				if prettyJSON != "" {
 					fmt.Println(prettyJSON)
 				} else {
@@ -258,10 +259,10 @@ func main() {
 				argument := c.Args().First()
 				switch {
 				case dateRegex.MatchString(argument):
-					API.getStatementPDF(argument)
+					API.GetStatementPDF(argument)
 					fmt.Println(fmt.Sprintf("[+] PDF file %s.pdf downloaded!", argument))
 				default:
-					prettyJSON, statements := API.getStatements(argument)
+					prettyJSON, statements := API.GetStatements(argument)
 					if prettyJSON != "" {
 						fmt.Println(prettyJSON)
 					} else {

@@ -1,4 +1,4 @@
-package main
+package n26
 
 import (
 	"encoding/json"
@@ -224,7 +224,7 @@ func (auth Auth) n26Request(endpoint string) []byte {
 	return body
 }
 
-func (auth Auth) getBalance(retType string) (string, *Balance) {
+func (auth Auth) GetBalance(retType string) (string, *Balance) {
 	body := auth.n26Request("/api/accounts")
 	balance := &Balance{}
 	check(json.Unmarshal(body, &balance))
@@ -235,7 +235,7 @@ func (auth Auth) getBalance(retType string) (string, *Balance) {
 	return "", balance
 }
 
-func (auth Auth) getInfo(retType string) (string, *PersonalInfo) {
+func (auth Auth) GetInfo(retType string) (string, *PersonalInfo) {
 	body := auth.n26Request("/api/me")
 	info := &PersonalInfo{}
 	check(json.Unmarshal(body, &info))
@@ -246,7 +246,7 @@ func (auth Auth) getInfo(retType string) (string, *PersonalInfo) {
 	return "", info
 }
 
-func (auth Auth) getStatus(retType string) (string, *Statuses) {
+func (auth Auth) GetStatus(retType string) (string, *Statuses) {
 	body := auth.n26Request("/api/me/statuses")
 	status := &Statuses{}
 	check(json.Unmarshal(body, &status))
@@ -257,7 +257,7 @@ func (auth Auth) getStatus(retType string) (string, *Statuses) {
 	return "", status
 }
 
-func (auth Auth) getAddresses(retType string) (string, *Addresses) {
+func (auth Auth) GetAddresses(retType string) (string, *Addresses) {
 	body := auth.n26Request("/api/addresses")
 	addresses := &Addresses{}
 	check(json.Unmarshal(body, &addresses))
@@ -268,7 +268,7 @@ func (auth Auth) getAddresses(retType string) (string, *Addresses) {
 	return "", addresses
 }
 
-func (auth Auth) getCards(retType string) (string, *Cards) {
+func (auth Auth) GetCards(retType string) (string, *Cards) {
 	body := auth.n26Request("/api/v2/cards")
 	cards := &Cards{}
 	check(json.Unmarshal(body, &cards))
@@ -279,7 +279,7 @@ func (auth Auth) getCards(retType string) (string, *Cards) {
 	return "", cards
 }
 
-func (auth Auth) getLimits(retType string) (string, *Limits) {
+func (auth Auth) GetLimits(retType string) (string, *Limits) {
 	body := auth.n26Request("/api/settings/account/limits")
 	limits := &Limits{}
 	check(json.Unmarshal(body, &limits))
@@ -290,7 +290,7 @@ func (auth Auth) getLimits(retType string) (string, *Limits) {
 	return "", limits
 }
 
-func (auth Auth) getContacts(retType string) (string, *Contacts) {
+func (auth Auth) GetContacts(retType string) (string, *Contacts) {
 	body := auth.n26Request("/api/smrt/contacts")
 	contacts := &Contacts{}
 	check(json.Unmarshal(body, &contacts))
@@ -301,7 +301,7 @@ func (auth Auth) getContacts(retType string) (string, *Contacts) {
 	return "", contacts
 }
 
-func (auth Auth) getTransactions(retType string) (string, *Transactions) {
+func (auth Auth) GetTransactions(retType string) (string, *Transactions) {
 	body := auth.n26Request("/api/smrt/transactions")
 	transactions := &Transactions{}
 	check(json.Unmarshal(body, &transactions))
@@ -312,7 +312,7 @@ func (auth Auth) getTransactions(retType string) (string, *Transactions) {
 	return "", transactions
 }
 
-func (auth Auth) getStatements(retType string) (string, *Statements) {
+func (auth Auth) GetStatements(retType string) (string, *Statements) {
 	body := auth.n26Request("/api/statements")
 	statements := &Statements{}
 	check(json.Unmarshal(body, &statements))
@@ -323,11 +323,17 @@ func (auth Auth) getStatements(retType string) (string, *Statements) {
 	return "", statements
 }
 
-func (auth Auth) getStatementPDF(ID string) {
+func (auth Auth) GetStatementPDF(ID string) {
 	body := auth.n26Request(fmt.Sprintf("%s%s", "/api/statements/", ID))
 	ioutil.WriteFile(
 		fmt.Sprintf("%s.pdf", ID),
 		body,
 		0750,
 	)
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
 }
