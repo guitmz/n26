@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/guitmz/n26.svg?branch=master)](https://travis-ci.org/guitmz/n26)
+
 # n26
 Go API and CLI to get information of your N26 account
 
