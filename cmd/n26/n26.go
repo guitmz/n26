@@ -40,7 +40,7 @@ func authentication() *n26.Auth {
 func main() {
 	table := tablewriter.NewWriter(os.Stdout)
 	app := cli.NewApp()
-	app.Version = "1.1.0"
+	app.Version = "1.2.0"
 	app.UsageText = "n26 command [json|statement ID]"
 	app.Name = "N26"
 	app.Usage = "your N26 Bank financial information on the command line"
