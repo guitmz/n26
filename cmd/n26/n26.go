@@ -11,7 +11,6 @@ import (
 
 	"github.com/guitmz/n26"
 	"github.com/howeyc/gopass"
-	"github.com/olekukonko/tablewriter"
 	"github.com/urfave/cli"
 )
 
@@ -37,8 +36,15 @@ func authentication() *n26.Auth {
 	return &n26.Auth{username, password}
 }
 
+// Interface for generic data writer that has a header and data table e.g. table writer and csv writer
+type dataWriter interface {
+	WriteData(header []string, data [][]string) error
+}
+type transactionWriter interface {
+	WriteTransactions(t *n26.Transactions) error
+}
+
 func main() {
-	table := tablewriter.NewWriter(os.Stdout)
 	app := cli.NewApp()
 	app.Version = "1.2.0"
 	app.UsageText = "n26 command [json|statement ID]"
@@ -59,9 +65,7 @@ func main() {
 					available := strconv.FormatFloat(balance.AvailableBalance, 'f', -1, 64)
 					usable := strconv.FormatFloat(balance.UsableBalance, 'f', -1, 64)
 					data := [][]string{[]string{balance.IBAN, balance.BIC, available, usable}}
-					table.SetHeader([]string{"IBAN", "BIC", "Available Balance", "Usable Balance"})
-					table.AppendBulk(data)
-					table.Render()
+					NewTableWriter().WriteData([]string{"IBAN", "BIC", "Available Balance", "Usable Balance"}, data)
 				}
 				return nil
 			},
@@ -76,9 +80,7 @@ func main() {
 					fmt.Println(prettyJSON)
 				} else {
 					data := [][]string{[]string{fmt.Sprintf("%s %s", info.FirstName, info.LastName), info.Email, info.MobilePhoneNumber}}
-					table.SetHeader([]string{"Full Name", "Email", "Mobile Phone Number"})
-					table.AppendBulk(data)
-					table.Render()
+					NewTableWriter().WriteData([]string{"Full Name", "Email", "Mobile Phone Number"}, data)
 				}
 				return nil
 			},
@@ -97,9 +99,7 @@ func main() {
 							time.Unix(status.Created, 0).String(),
 						},
 					}
-					table.SetHeader([]string{"Created"})
-					table.AppendBulk(data)
-					table.Render()
+					NewTableWriter().WriteData([]string{"Created"}, data)
 				}
 				return nil
 			},
@@ -125,9 +125,7 @@ func main() {
 							},
 						)
 					}
-					table.SetHeader([]string{"Address", "Number", "Zipcode", "City", "Type"})
-					table.AppendBulk(data)
-					table.Render()
+					NewTableWriter().WriteData([]string{"Address", "Number", "Zipcode", "City", "Type"}, data)
 				}
 				return nil
 			},
@@ -160,9 +158,7 @@ func main() {
 							},
 						)
 					}
-					table.SetHeader([]string{"Name on Card", "Type", "Product type", "Number"})
-					table.AppendBulk(data)
-					table.Render()
+					NewTableWriter().WriteData([]string{"Name on Card", "Type", "Product type", "Number"}, data)
 				}
 				return nil
 			},
@@ -186,9 +182,7 @@ func main() {
 							},
 						)
 					}
-					table.SetHeader([]string{"Limit", "Amount"})
-					table.AppendBulk(data)
-					table.Render()
+					NewTableWriter().WriteData([]string{"Limit", "Amount"}, data)
 				}
 				return nil
 			},
@@ -213,53 +207,22 @@ func main() {
 							},
 						)
 					}
-					table.SetHeader([]string{"Name", "IBAN", "BIC", "Type"})
-					table.AppendBulk(data)
-					table.Render()
+					NewTableWriter().WriteData([]string{"Name", "IBAN", "BIC", "Type"}, data)
 				}
 				return nil
 			},
 		},
 		{
-			Name:  "transactions",
-			Usage: "your past transactions",
-			Action: func(c *cli.Context) error {
+			Name:      "transactions",
+			Usage:     "list your past transactions",
+			ArgsUsage: "[csv|json|table]",
+			Action: func(c *cli.Context) (err error) {
 				API := authentication()
-				prettyJSON, transactions := API.GetTransactions(c.Args().First())
-				if prettyJSON != "" {
-					fmt.Println(prettyJSON)
-				} else {
-					data := [][]string{}
-					for _, transaction := range *transactions {
-						amount := strconv.FormatFloat(transaction.Amount, 'f', -1, 64)
-						var location string
-						if transaction.MerchantCity != "" {
-							location = transaction.MerchantCity
-							if transaction.MerchantCountry != 0 {
-								location += ", "
-							}
-						}
-						if transaction.MerchantCountry != 0 {
-							location += "Country Code: " + fmt.Sprint(transaction.MerchantCountry)
-						}
-						data = append(data,
-							[]string{
-								transaction.PartnerName,
-								transaction.PartnerIban,
-								transaction.PartnerBic,
-								transaction.MerchantName,
-								location,
-								amount,
-								transaction.CurrencyCode,
-								transaction.Type,
-							},
-						)
-					}
-					table.SetHeader([]string{"Name", "IBAN", "BIC", "Merchant", "Location", "Amount", "Currency", "Type"})
-					table.AppendBulk(data)
-					table.Render()
-				}
-				return nil
+				writer, err := getTransactionWriter(c.Args().First())
+				check(err)
+				_, transactions := API.GetTransactions("")
+				err = writer.WriteTransactions(transactions)
+				return
 			},
 		},
 		{
@@ -286,9 +249,7 @@ func main() {
 								},
 							)
 						}
-						table.SetHeader([]string{"ID"})
-						table.AppendBulk(data)
-						table.Render()
+						NewTableWriter().WriteData([]string{"ID"}, data)
 					}
 				}
 				return nil
@@ -298,4 +259,56 @@ func main() {
 
 	sort.Sort(cli.CommandsByName(app.Commands))
 	app.Run(os.Args)
+}
+
+func getTransactionWriter(outType string) (transactionWriter, error) {
+	if outType == "json" {
+		return jsonWriter{}, nil
+	}
+	var table dataWriter
+	if outType == "csv" {
+		var err error
+		table, err = NewCsvWriter(os.Stdout)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		table = NewTableWriter()
+	}
+	return transactionToStringWriter{table}, nil
+}
+
+type transactionToStringWriter struct {
+	out dataWriter
+}
+
+func (w transactionToStringWriter) WriteTransactions(transactions *n26.Transactions) error {
+	data := [][]string{}
+	for _, transaction := range *transactions {
+		amount := strconv.FormatFloat(transaction.Amount, 'f', -1, 64)
+		var location string
+		if transaction.MerchantCity != "" {
+			location = transaction.MerchantCity
+			if transaction.MerchantCountry != 0 {
+				location += ", "
+			}
+		}
+		if transaction.MerchantCountry != 0 {
+			location += "Country Code: " + fmt.Sprint(transaction.MerchantCountry)
+		}
+		data = append(data,
+			[]string{
+				transaction.PartnerName,
+				transaction.PartnerIban,
+				transaction.PartnerBic,
+				transaction.MerchantName,
+				location,
+				amount,
+				transaction.CurrencyCode,
+				transaction.Type,
+			},
+		)
+	}
+	return w.out.WriteData([]string{"Name", "IBAN", "BIC", "Merchant", "Location", "Amount", "Currency", "Type"},
+		data)
 }
