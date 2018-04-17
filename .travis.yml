@@ -4,7 +4,7 @@ services:
   - docker
 
 before_script:
-  - docker build -t guitmz/n26 cmd/n26
+  - docker build -t guitmz/n26 .
  
 script:
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
