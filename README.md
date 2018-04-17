@@ -68,6 +68,9 @@ N26 password: ********
   "id": "11111-1scasda-1112312-adasdasdasdas"
 }
 ```
+
+And `csv` for transactions.
+
 You can run `n26 help` for usage description.
 
 # Missing features

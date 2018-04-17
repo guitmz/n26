@@ -46,8 +46,8 @@ type transactionWriter interface {
 
 func main() {
 	app := cli.NewApp()
-	app.Version = "1.2.0"
-	app.UsageText = "n26 command [json|statement ID]"
+	app.Version = "1.3.0"
+	app.UsageText = "n26 command [json|csv|statement ID]"
 	app.Name = "N26"
 	app.Usage = "your N26 Bank financial information on the command line"
 	app.Author = "Guilherme Thomazi"
@@ -214,7 +214,7 @@ func main() {
 		},
 		{
 			Name:      "transactions",
-			Usage:     "list your past transactions",
+			Usage:     "list your past transactions. Supports CSV output",
 			ArgsUsage: "[csv|json|table]",
 			Action: func(c *cli.Context) (err error) {
 				API := authentication()
@@ -226,8 +226,9 @@ func main() {
 			},
 		},
 		{
-			Name:  "statements",
-			Usage: "your statements",
+			Name:      "statements",
+			Usage:     "your statements. Passing the statement ID as argument, downloads the PDF to the current directory",
+			ArgsUsage: "[statement ID]",
 			Action: func(c *cli.Context) error {
 				API := authentication()
 				dateRegex := regexp.MustCompile("statement-[0-9][0-9][0-9][0-9]-(1[0-2]|0[1-9]|\\d)")
