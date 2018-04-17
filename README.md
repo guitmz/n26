@@ -21,7 +21,7 @@ USAGE:
    n26 command [json|statement ID]
 
 VERSION:
-   1.2.0
+   1.3.0
 
 AUTHOR:
    Guilherme Thomazi <thomazi@linux.com>
