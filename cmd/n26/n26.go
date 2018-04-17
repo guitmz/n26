@@ -299,6 +299,7 @@ func (w transactionToStringWriter) WriteTransactions(transactions *n26.Transacti
 		}
 		data = append(data,
 			[]string{
+				transaction.VisibleTS.String(),
 				transaction.PartnerName,
 				transaction.PartnerIban,
 				transaction.PartnerBic,
@@ -310,6 +311,6 @@ func (w transactionToStringWriter) WriteTransactions(transactions *n26.Transacti
 			},
 		)
 	}
-	return w.out.WriteData([]string{"Name", "IBAN", "BIC", "Merchant", "Location", "Amount", "Currency", "Type"},
+	return w.out.WriteData([]string{"Time", "Name", "IBAN", "BIC", "Merchant", "Location", "Amount", "Currency", "Type"},
 		data)
 }
