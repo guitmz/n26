@@ -10,7 +10,9 @@ Go API and CLI to get information of your N26 account
 You can also install with `go get -u github.com/guitmz/n26/cmd/n26` (make sure you have your Go env setup correctly). 
 
 # Docker
-A Dockerfile is also provided and the prebuilt image is available for pulling: `docker pull guitmz/n26`
+A Dockerfile is also provided and the prebuilt image is available for pulling: `docker pull guitmz/n26` or `docker pull guitmz/n26:DESIRED_TAG`
+
+As of now, the container rely on the `N26_USERNAME` and `N26_PASSWORD` environment variables being passed to it.
 
 # Usage
 ```
@@ -78,4 +80,6 @@ You can run `n26 help` for usage description.
 - Block/unblock cards
 - Set card limit
 - API docs
+- Better error handling
+- A terminal UI could also be implemented
 - ?
