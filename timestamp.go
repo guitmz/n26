@@ -29,3 +29,8 @@ func (ts *TimeStamp) UnmarshalJSON(b []byte) (err error) {
 	ts.Time = unadjusted.Add(time.Duration(-offset) * time.Second)
 	return
 }
+
+// convert the timestamp to an integer - millis since epoch
+func (ts *TimeStamp) AsMillis() int64 {
+	return ts.UnixNano() / int64(time.Millisecond)
+}
