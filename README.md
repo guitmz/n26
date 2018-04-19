@@ -12,7 +12,12 @@ You can also install with `go get -u github.com/guitmz/n26/cmd/n26` (make sure y
 # Docker
 A Dockerfile is also provided and the prebuilt image is available for pulling: `docker pull guitmz/n26` or `docker pull guitmz/n26:DESIRED_TAG`
 
-As of now, the container rely on the `N26_USERNAME` and `N26_PASSWORD` environment variables being passed to it.
+You can run it like:
+`$ docker run -e N26_USERNAME="username" -e N26_PASSWORD="password" guitmz/n26`
+
+or if you want to be asked for your credentials:
+
+`$ docker run -ti guitmz/n26`
 
 # Usage
 ```
@@ -23,7 +28,7 @@ USAGE:
    n26 command [json|statement ID]
 
 VERSION:
-   1.3.1
+   1.4.0
 
 AUTHOR:
    Guilherme Thomazi <thomazi@linux.com>
