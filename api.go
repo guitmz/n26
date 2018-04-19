@@ -209,12 +209,13 @@ func (auth Auth) requestToken() string {
 	return token.AccessToken
 }
 
-func (auth Auth) n26Request(endpoint string) []byte {
+func (auth Auth) n26Request(endpoint string, params map[string]string) []byte {
 	u, _ := url.ParseRequestURI(apiURL)
 	u.Path = endpoint
-	urlStr := fmt.Sprintf("%v", u)
 
-	req, _ := http.NewRequest("GET", urlStr, nil)
+	u.RawQuery = mapToQuery(params).Encode()
+
+	req, _ := http.NewRequest("GET", u.String(), nil)
 	req.Header.Add("Authorization", "bearer "+auth.requestToken())
 
 	res, _ := http.DefaultClient.Do(req)
@@ -223,9 +224,16 @@ func (auth Auth) n26Request(endpoint string) []byte {
 
 	return body
 }
+func mapToQuery(params map[string]string) url.Values {
+	values := url.Values{}
+	for k, v := range params {
+		values.Set(k, v)
+	}
+	return values
+}
 
 func (auth Auth) GetBalance(retType string) (string, *Balance) {
-	body := auth.n26Request("/api/accounts")
+	body := auth.n26Request("/api/accounts", nil)
 	balance := &Balance{}
 	check(json.Unmarshal(body, &balance))
 	identedJSON, _ := json.MarshalIndent(&balance, "", "  ")
@@ -236,7 +244,7 @@ func (auth Auth) GetBalance(retType string) (string, *Balance) {
 }
 
 func (auth Auth) GetInfo(retType string) (string, *PersonalInfo) {
-	body := auth.n26Request("/api/me")
+	body := auth.n26Request("/api/me", nil)
 	info := &PersonalInfo{}
 	check(json.Unmarshal(body, &info))
 	identedJSON, _ := json.MarshalIndent(&info, "", "  ")
@@ -247,7 +255,7 @@ func (auth Auth) GetInfo(retType string) (string, *PersonalInfo) {
 }
 
 func (auth Auth) GetStatus(retType string) (string, *Statuses) {
-	body := auth.n26Request("/api/me/statuses")
+	body := auth.n26Request("/api/me/statuses", nil)
 	status := &Statuses{}
 	check(json.Unmarshal(body, &status))
 	identedJSON, _ := json.MarshalIndent(&status, "", "  ")
@@ -258,7 +266,7 @@ func (auth Auth) GetStatus(retType string) (string, *Statuses) {
 }
 
 func (auth Auth) GetAddresses(retType string) (string, *Addresses) {
-	body := auth.n26Request("/api/addresses")
+	body := auth.n26Request("/api/addresses", nil)
 	addresses := &Addresses{}
 	check(json.Unmarshal(body, &addresses))
 	identedJSON, _ := json.MarshalIndent(&addresses, "", "  ")
@@ -269,7 +277,7 @@ func (auth Auth) GetAddresses(retType string) (string, *Addresses) {
 }
 
 func (auth Auth) GetCards(retType string) (string, *Cards) {
-	body := auth.n26Request("/api/v2/cards")
+	body := auth.n26Request("/api/v2/cards", nil)
 	cards := &Cards{}
 	check(json.Unmarshal(body, &cards))
 	identedJSON, _ := json.MarshalIndent(&cards, "", "  ")
@@ -280,7 +288,7 @@ func (auth Auth) GetCards(retType string) (string, *Cards) {
 }
 
 func (auth Auth) GetLimits(retType string) (string, *Limits) {
-	body := auth.n26Request("/api/settings/account/limits")
+	body := auth.n26Request("/api/settings/account/limits", nil)
 	limits := &Limits{}
 	check(json.Unmarshal(body, &limits))
 	identedJSON, _ := json.MarshalIndent(&limits, "", "  ")
@@ -291,7 +299,7 @@ func (auth Auth) GetLimits(retType string) (string, *Limits) {
 }
 
 func (auth Auth) GetContacts(retType string) (string, *Contacts) {
-	body := auth.n26Request("/api/smrt/contacts")
+	body := auth.n26Request("/api/smrt/contacts", nil)
 	contacts := &Contacts{}
 	check(json.Unmarshal(body, &contacts))
 	identedJSON, _ := json.MarshalIndent(&contacts, "", "  ")
@@ -301,19 +309,30 @@ func (auth Auth) GetContacts(retType string) (string, *Contacts) {
 	return "", contacts
 }
 
-func (auth Auth) GetTransactions(retType string) (string, *Transactions) {
-	body := auth.n26Request("/api/smrt/transactions")
-	transactions := &Transactions{}
-	check(json.Unmarshal(body, &transactions))
-	identedJSON, _ := json.MarshalIndent(&transactions, "", "  ")
-	if retType == "json" {
-		return string(identedJSON), transactions
+func (auth Auth) GetLastTransactions() (*Transactions, error) {
+	return auth.GetTransactions(TimeStamp{}, TimeStamp{})
+}
+
+// Get transactions for the given time window.
+// Use the zero values for the time stamps if no restrictions are
+// desired (use the defaults on the server)
+func (auth Auth) GetTransactions(from, to TimeStamp) (*Transactions, error) {
+	params := map[string]string{}
+	//Filter is applied only if both values are set
+	if !from.IsZero() && !to.IsZero() {
+		params["from"] = fmt.Sprint(from.AsMillis())
+		params["to"] = fmt.Sprint(to.AsMillis())
 	}
-	return "", transactions
+	body := auth.n26Request("/api/smrt/transactions", params)
+	transactions := &Transactions{}
+	if err := json.Unmarshal(body, &transactions); err != nil {
+		return nil, err
+	}
+	return transactions, nil
 }
 
 func (auth Auth) GetStatements(retType string) (string, *Statements) {
-	body := auth.n26Request("/api/statements")
+	body := auth.n26Request("/api/statements", nil)
 	statements := &Statements{}
 	check(json.Unmarshal(body, &statements))
 	identedJSON, _ := json.MarshalIndent(&statements, "", "  ")
@@ -324,7 +343,7 @@ func (auth Auth) GetStatements(retType string) (string, *Statements) {
 }
 
 func (auth Auth) GetStatementPDF(ID string) {
-	body := auth.n26Request(fmt.Sprintf("%s%s", "/api/statements/", ID))
+	body := auth.n26Request(fmt.Sprintf("%s%s", "/api/statements/", ID), nil)
 	ioutil.WriteFile(
 		fmt.Sprintf("%s.pdf", ID),
 		body,

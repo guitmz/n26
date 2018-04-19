@@ -216,12 +216,32 @@ func main() {
 			Name:      "transactions",
 			Usage:     "list your past transactions. Supports CSV output",
 			ArgsUsage: "[csv|json|table]",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "from", Usage: "retrieve transactions from this date. " +
+					"Also 'to' flag needs to be set. Calendar date in the format yyyy-mm-dd. E.g. 2018-03-01"},
+				cli.StringFlag{Name: "to", Usage: "retrieve transactions until this date. " +
+					"Also 'from' flag needs to be set. Calendar date in the format yyyy-mm-dd. E.g. 2018-03-31"},
+			},
 			Action: func(c *cli.Context) (err error) {
+				const dateFormat = "2006-01-02"
 				API := authentication()
 				writer, err := getTransactionWriter(c.Args().First())
 				check(err)
-				_, transactions := API.GetTransactions("")
+				var transactions *n26.Transactions
+				if c.IsSet("from") && c.IsSet("to") {
+					var from, to n26.TimeStamp
+					from.Time, err = time.Parse(dateFormat, c.String("from"))
+					check(err)
+					to.Time, err = time.Parse(dateFormat, c.String("to"))
+					check(err)
+					transactions, err = API.GetTransactions(from, to)
+				} else {
+					transactions, err = API.GetLastTransactions()
+				}
+				check(err)
+
 				err = writer.WriteTransactions(transactions)
+				check(err)
 				return
 			},
 		},
