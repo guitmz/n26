@@ -20,7 +20,7 @@ func check(e error) {
 	}
 }
 
-func authentication() *n26.Auth {
+func authentication() (*n26.Client, error) {
 	username := os.Getenv("N26_USERNAME")
 	if username == "" {
 		fmt.Print("N26 username: ")
@@ -33,7 +33,7 @@ func authentication() *n26.Auth {
 		check(err)
 		password = string(maskedPass)
 	}
-	return &n26.Auth{username, password}
+	return n26.NewClient(n26.Auth{username, password})
 }
 
 // Interface for generic data writer that has a header and data table e.g. table writer and csv writer
@@ -57,7 +57,8 @@ func main() {
 			Name:  "balance",
 			Usage: "your balance information",
 			Action: func(c *cli.Context) error {
-				API := authentication()
+				API, err := authentication()
+				check(err)
 				prettyJSON, balance := API.GetBalance(c.Args().First())
 				if prettyJSON != "" {
 					fmt.Println(prettyJSON)
@@ -74,7 +75,8 @@ func main() {
 			Name:  "info",
 			Usage: "personal information",
 			Action: func(c *cli.Context) error {
-				API := authentication()
+				API, err := authentication()
+				check(err)
 				prettyJSON, info := API.GetInfo(c.Args().First())
 				if prettyJSON != "" {
 					fmt.Println(prettyJSON)
@@ -89,7 +91,8 @@ func main() {
 			Name:  "status",
 			Usage: "general status of your account",
 			Action: func(c *cli.Context) error {
-				API := authentication()
+				API, err := authentication()
+				check(err)
 				prettyJSON, status := API.GetStatus(c.Args().First())
 				if prettyJSON != "" {
 					fmt.Println(prettyJSON)
@@ -108,7 +111,8 @@ func main() {
 			Name:  "addresses",
 			Usage: "addresses linked to your account",
 			Action: func(c *cli.Context) error {
-				API := authentication()
+				API, err := authentication()
+				check(err)
 				prettyJSON, addresses := API.GetAddresses(c.Args().First())
 				if prettyJSON != "" {
 					fmt.Println(prettyJSON)
@@ -142,7 +146,8 @@ func main() {
 			Name:  "cards",
 			Usage: "list your cards information",
 			Action: func(c *cli.Context) error {
-				API := authentication()
+				API, err := authentication()
+				check(err)
 				prettyJSON, cards := API.GetCards(c.Args().First())
 				if prettyJSON != "" {
 					fmt.Println(prettyJSON)
@@ -167,7 +172,8 @@ func main() {
 			Name:  "limits",
 			Usage: "your account limits",
 			Action: func(c *cli.Context) error {
-				API := authentication()
+				API, err := authentication()
+				check(err)
 				prettyJSON, limits := API.GetLimits(c.Args().First())
 				if prettyJSON != "" {
 					fmt.Println(prettyJSON)
@@ -191,7 +197,8 @@ func main() {
 			Name:  "contacts",
 			Usage: "your saved contacts",
 			Action: func(c *cli.Context) error {
-				API := authentication()
+				API, err := authentication()
+				check(err)
 				prettyJSON, contacts := API.GetContacts(c.Args().First())
 				if prettyJSON != "" {
 					fmt.Println(prettyJSON)
@@ -224,7 +231,8 @@ func main() {
 			},
 			Action: func(c *cli.Context) (err error) {
 				const dateFormat = "2006-01-02"
-				API := authentication()
+				API, err := authentication()
+				check(err)
 				writer, err := getTransactionWriter(c.Args().First())
 				check(err)
 				var transactions *n26.Transactions
@@ -250,7 +258,8 @@ func main() {
 			Usage:     "your statements. Passing the statement ID as argument, downloads the PDF to the current directory",
 			ArgsUsage: "[statement ID]",
 			Action: func(c *cli.Context) error {
-				API := authentication()
+				API, err := authentication()
+				check(err)
 				dateRegex := regexp.MustCompile("statement-[0-9][0-9][0-9][0-9]-(1[0-2]|0[1-9]|\\d)")
 				argument := c.Args().First()
 				switch {
@@ -279,7 +288,8 @@ func main() {
 	}
 
 	sort.Sort(cli.CommandsByName(app.Commands))
-	app.Run(os.Args)
+	err := app.Run(os.Args)
+	check(err)
 }
 
 func getTransactionWriter(outType string) (transactionWriter, error) {
