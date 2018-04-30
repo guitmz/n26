@@ -46,7 +46,7 @@ type transactionWriter interface {
 
 func main() {
 	app := cli.NewApp()
-	app.Version = "1.4.0"
+	app.Version = "1.4.1"
 	app.UsageText = "n26 command [json|csv|statement ID]"
 	app.Name = "N26"
 	app.Usage = "your N26 Bank financial information on the command line"

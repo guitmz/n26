@@ -29,7 +29,7 @@ USAGE:
    n26 command [json|statement ID]
 
 VERSION:
-   1.4.0
+   1.4.1
 
 AUTHOR:
    Guilherme Thomazi <thomazi@linux.com>
