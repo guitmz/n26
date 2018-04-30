@@ -1,12 +1,13 @@
 package n26
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/oauth2"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strings"
 )
 
 const apiURL = "https://api.tech26.de"
@@ -185,40 +186,29 @@ type Statements []struct {
 	Year      int    `json:"year"`
 }
 
-func (auth Auth) requestToken() string {
-	token := &Token{}
-	data := url.Values{}
-	data.Set("grant_type", "password")
-	data.Add("username", auth.UserName)
-	data.Add("password", auth.Password)
+type Client http.Client
 
-	u, _ := url.ParseRequestURI(apiURL)
-	u.Path = "/oauth/token"
-	urlStr := fmt.Sprintf("%v", u)
-
-	req, _ := http.NewRequest("POST", urlStr, strings.NewReader(data.Encode()))
-	req.Header.Add("Authorization", "Basic YW5kcm9pZDpzZWNyZXQ=")
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	res, err := http.DefaultClient.Do(req)
-	check(err)
-	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
-	check(json.Unmarshal(body, token))
-
-	return token.AccessToken
+func NewClient(a Auth) (*Client, error) {
+	c := oauth2.Config{
+		ClientID:     "android",
+		ClientSecret: "secret",
+		Endpoint:     oauth2.Endpoint{TokenURL: apiURL + "/oauth/token"},
+	}
+	ctx := context.Background()
+	tok, err := c.PasswordCredentialsToken(ctx, a.UserName, a.Password)
+	if err != nil {
+		return nil, err
+	}
+	return (*Client)(c.Client(ctx, tok)), nil
 }
 
-func (auth Auth) n26Request(endpoint string, params map[string]string) []byte {
+func (c *Client) n26Request(endpoint string, params map[string]string) []byte {
 	u, _ := url.ParseRequestURI(apiURL)
 	u.Path = endpoint
 
 	u.RawQuery = mapToQuery(params).Encode()
 
-	req, _ := http.NewRequest("GET", u.String(), nil)
-	req.Header.Add("Authorization", "bearer "+auth.requestToken())
-
-	res, _ := http.DefaultClient.Do(req)
+	res, _ := (*http.Client)(c).Get(u.String())
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
 
@@ -232,7 +222,7 @@ func mapToQuery(params map[string]string) url.Values {
 	return values
 }
 
-func (auth Auth) GetBalance(retType string) (string, *Balance) {
+func (auth *Client) GetBalance(retType string) (string, *Balance) {
 	body := auth.n26Request("/api/accounts", nil)
 	balance := &Balance{}
 	check(json.Unmarshal(body, &balance))
@@ -243,7 +233,7 @@ func (auth Auth) GetBalance(retType string) (string, *Balance) {
 	return "", balance
 }
 
-func (auth Auth) GetInfo(retType string) (string, *PersonalInfo) {
+func (auth *Client) GetInfo(retType string) (string, *PersonalInfo) {
 	body := auth.n26Request("/api/me", nil)
 	info := &PersonalInfo{}
 	check(json.Unmarshal(body, &info))
@@ -254,7 +244,7 @@ func (auth Auth) GetInfo(retType string) (string, *PersonalInfo) {
 	return "", info
 }
 
-func (auth Auth) GetStatus(retType string) (string, *Statuses) {
+func (auth *Client) GetStatus(retType string) (string, *Statuses) {
 	body := auth.n26Request("/api/me/statuses", nil)
 	status := &Statuses{}
 	check(json.Unmarshal(body, &status))
@@ -265,7 +255,7 @@ func (auth Auth) GetStatus(retType string) (string, *Statuses) {
 	return "", status
 }
 
-func (auth Auth) GetAddresses(retType string) (string, *Addresses) {
+func (auth *Client) GetAddresses(retType string) (string, *Addresses) {
 	body := auth.n26Request("/api/addresses", nil)
 	addresses := &Addresses{}
 	check(json.Unmarshal(body, &addresses))
@@ -276,7 +266,7 @@ func (auth Auth) GetAddresses(retType string) (string, *Addresses) {
 	return "", addresses
 }
 
-func (auth Auth) GetCards(retType string) (string, *Cards) {
+func (auth *Client) GetCards(retType string) (string, *Cards) {
 	body := auth.n26Request("/api/v2/cards", nil)
 	cards := &Cards{}
 	check(json.Unmarshal(body, &cards))
@@ -287,7 +277,7 @@ func (auth Auth) GetCards(retType string) (string, *Cards) {
 	return "", cards
 }
 
-func (auth Auth) GetLimits(retType string) (string, *Limits) {
+func (auth *Client) GetLimits(retType string) (string, *Limits) {
 	body := auth.n26Request("/api/settings/account/limits", nil)
 	limits := &Limits{}
 	check(json.Unmarshal(body, &limits))
@@ -298,7 +288,7 @@ func (auth Auth) GetLimits(retType string) (string, *Limits) {
 	return "", limits
 }
 
-func (auth Auth) GetContacts(retType string) (string, *Contacts) {
+func (auth *Client) GetContacts(retType string) (string, *Contacts) {
 	body := auth.n26Request("/api/smrt/contacts", nil)
 	contacts := &Contacts{}
 	check(json.Unmarshal(body, &contacts))
@@ -309,14 +299,14 @@ func (auth Auth) GetContacts(retType string) (string, *Contacts) {
 	return "", contacts
 }
 
-func (auth Auth) GetLastTransactions() (*Transactions, error) {
+func (auth *Client) GetLastTransactions() (*Transactions, error) {
 	return auth.GetTransactions(TimeStamp{}, TimeStamp{})
 }
 
 // Get transactions for the given time window.
 // Use the zero values for the time stamps if no restrictions are
 // desired (use the defaults on the server)
-func (auth Auth) GetTransactions(from, to TimeStamp) (*Transactions, error) {
+func (auth *Client) GetTransactions(from, to TimeStamp) (*Transactions, error) {
 	params := map[string]string{}
 	//Filter is applied only if both values are set
 	if !from.IsZero() && !to.IsZero() {
@@ -331,7 +321,7 @@ func (auth Auth) GetTransactions(from, to TimeStamp) (*Transactions, error) {
 	return transactions, nil
 }
 
-func (auth Auth) GetStatements(retType string) (string, *Statements) {
+func (auth *Client) GetStatements(retType string) (string, *Statements) {
 	body := auth.n26Request("/api/statements", nil)
 	statements := &Statements{}
 	check(json.Unmarshal(body, &statements))
@@ -342,7 +332,7 @@ func (auth Auth) GetStatements(retType string) (string, *Statements) {
 	return "", statements
 }
 
-func (auth Auth) GetStatementPDF(ID string) {
+func (auth *Client) GetStatementPDF(ID string) {
 	body := auth.n26Request(fmt.Sprintf("%s%s", "/api/statements/", ID), nil)
 	ioutil.WriteFile(
 		fmt.Sprintf("%s.pdf", ID),
