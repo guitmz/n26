@@ -14,6 +14,10 @@ import (
 	"github.com/urfave/cli"
 )
 
+const (
+	appVersion = "1.4.2"
+)
+
 func check(e error) {
 	if e != nil {
 		panic(e)
@@ -33,7 +37,7 @@ func authentication() (*n26.Client, error) {
 		check(err)
 		password = string(maskedPass)
 	}
-	return n26.NewClient(n26.Auth{username, password})
+	return n26.NewClient(n26.Auth{UserName: username, Password: password})
 }
 
 // Interface for generic data writer that has a header and data table e.g. table writer and csv writer
@@ -46,7 +50,7 @@ type transactionWriter interface {
 
 func main() {
 	app := cli.NewApp()
-	app.Version = "1.4.1"
+	app.Version = appVersion
 	app.UsageText = "n26 command [json|csv|statement ID]"
 	app.Name = "N26"
 	app.Usage = "your N26 Bank financial information on the command line"
