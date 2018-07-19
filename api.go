@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/oauth2"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"golang.org/x/oauth2"
 )
 
 const apiURL = "https://api.tech26.de"
@@ -105,13 +106,13 @@ type Cards []struct {
 	PublicToken                         interface{} `json:"publicToken"`
 	Pan                                 interface{} `json:"pan"`
 	MaskedPan                           string      `json:"maskedPan"`
-	ExpirationDate                      int64       `json:"expirationDate"`
+	ExpirationDate                      TimeStamp   `json:"expirationDate"`
 	CardType                            string      `json:"cardType"`
 	Status                              string      `json:"status"`
 	CardProduct                         interface{} `json:"cardProduct"`
 	CardProductType                     string      `json:"cardProductType"`
-	PinDefined                          interface{} `json:"pinDefined"`
-	CardActivated                       interface{} `json:"cardActivated"`
+	PinDefined                          TimeStamp   `json:"pinDefined"`
+	CardActivated                       TimeStamp   `json:"cardActivated"`
 	UsernameOnCard                      string      `json:"usernameOnCard"`
 	ExceetExpressCardDelivery           interface{} `json:"exceetExpressCardDelivery"`
 	Membership                          interface{} `json:"membership"`
@@ -202,18 +203,31 @@ func NewClient(a Auth) (*Client, error) {
 	return (*Client)(c.Client(ctx, tok)), nil
 }
 
-func (c *Client) n26Request(endpoint string, params map[string]string) []byte {
+func (c *Client) n26Request(requestMethod, endpoint string, params map[string]string) []byte {
+	var req *http.Request
+	var err error
+
 	u, _ := url.ParseRequestURI(apiURL)
 	u.Path = endpoint
-
 	u.RawQuery = mapToQuery(params).Encode()
 
-	res, _ := (*http.Client)(c).Get(u.String())
-	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
+	switch requestMethod {
+	case http.MethodGet:
+		req, err = http.NewRequest(http.MethodGet, u.String(), nil)
+		check(err)
+	case http.MethodPost:
+		req, err = http.NewRequest(http.MethodPost, u.String(), nil)
+		check(err)
+	}
 
+	res, err := (*http.Client)(c).Do(req)
+	check(err)
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	check(err)
 	return body
 }
+
 func mapToQuery(params map[string]string) url.Values {
 	values := url.Values{}
 	for k, v := range params {
@@ -223,7 +237,7 @@ func mapToQuery(params map[string]string) url.Values {
 }
 
 func (auth *Client) GetBalance(retType string) (string, *Balance) {
-	body := auth.n26Request("/api/accounts", nil)
+	body := auth.n26Request(http.MethodGet, "/api/accounts", nil)
 	balance := &Balance{}
 	check(json.Unmarshal(body, &balance))
 	identedJSON, _ := json.MarshalIndent(&balance, "", "  ")
@@ -234,7 +248,7 @@ func (auth *Client) GetBalance(retType string) (string, *Balance) {
 }
 
 func (auth *Client) GetInfo(retType string) (string, *PersonalInfo) {
-	body := auth.n26Request("/api/me", nil)
+	body := auth.n26Request(http.MethodGet, "/api/me", nil)
 	info := &PersonalInfo{}
 	check(json.Unmarshal(body, &info))
 	identedJSON, _ := json.MarshalIndent(&info, "", "  ")
@@ -245,7 +259,7 @@ func (auth *Client) GetInfo(retType string) (string, *PersonalInfo) {
 }
 
 func (auth *Client) GetStatus(retType string) (string, *Statuses) {
-	body := auth.n26Request("/api/me/statuses", nil)
+	body := auth.n26Request(http.MethodGet, "/api/me/statuses", nil)
 	status := &Statuses{}
 	check(json.Unmarshal(body, &status))
 	identedJSON, _ := json.MarshalIndent(&status, "", "  ")
@@ -256,7 +270,7 @@ func (auth *Client) GetStatus(retType string) (string, *Statuses) {
 }
 
 func (auth *Client) GetAddresses(retType string) (string, *Addresses) {
-	body := auth.n26Request("/api/addresses", nil)
+	body := auth.n26Request(http.MethodGet, "/api/addresses", nil)
 	addresses := &Addresses{}
 	check(json.Unmarshal(body, &addresses))
 	identedJSON, _ := json.MarshalIndent(&addresses, "", "  ")
@@ -267,7 +281,7 @@ func (auth *Client) GetAddresses(retType string) (string, *Addresses) {
 }
 
 func (auth *Client) GetCards(retType string) (string, *Cards) {
-	body := auth.n26Request("/api/v2/cards", nil)
+	body := auth.n26Request(http.MethodGet, "/api/v2/cards", nil)
 	cards := &Cards{}
 	check(json.Unmarshal(body, &cards))
 	identedJSON, _ := json.MarshalIndent(&cards, "", "  ")
@@ -278,7 +292,7 @@ func (auth *Client) GetCards(retType string) (string, *Cards) {
 }
 
 func (auth *Client) GetLimits(retType string) (string, *Limits) {
-	body := auth.n26Request("/api/settings/account/limits", nil)
+	body := auth.n26Request(http.MethodGet, "/api/settings/account/limits", nil)
 	limits := &Limits{}
 	check(json.Unmarshal(body, &limits))
 	identedJSON, _ := json.MarshalIndent(&limits, "", "  ")
@@ -289,7 +303,7 @@ func (auth *Client) GetLimits(retType string) (string, *Limits) {
 }
 
 func (auth *Client) GetContacts(retType string) (string, *Contacts) {
-	body := auth.n26Request("/api/smrt/contacts", nil)
+	body := auth.n26Request(http.MethodGet, "/api/smrt/contacts", nil)
 	contacts := &Contacts{}
 	check(json.Unmarshal(body, &contacts))
 	identedJSON, _ := json.MarshalIndent(&contacts, "", "  ")
@@ -313,7 +327,7 @@ func (auth *Client) GetTransactions(from, to TimeStamp) (*Transactions, error) {
 		params["from"] = fmt.Sprint(from.AsMillis())
 		params["to"] = fmt.Sprint(to.AsMillis())
 	}
-	body := auth.n26Request("/api/smrt/transactions", params)
+	body := auth.n26Request(http.MethodGet, "/api/smrt/transactions", params)
 	transactions := &Transactions{}
 	if err := json.Unmarshal(body, &transactions); err != nil {
 		return nil, err
@@ -322,7 +336,7 @@ func (auth *Client) GetTransactions(from, to TimeStamp) (*Transactions, error) {
 }
 
 func (auth *Client) GetStatements(retType string) (string, *Statements) {
-	body := auth.n26Request("/api/statements", nil)
+	body := auth.n26Request(http.MethodGet, "/api/statements", nil)
 	statements := &Statements{}
 	check(json.Unmarshal(body, &statements))
 	identedJSON, _ := json.MarshalIndent(&statements, "", "  ")
@@ -333,12 +347,22 @@ func (auth *Client) GetStatements(retType string) (string, *Statements) {
 }
 
 func (auth *Client) GetStatementPDF(ID string) {
-	body := auth.n26Request(fmt.Sprintf("%s%s", "/api/statements/", ID), nil)
+	body := auth.n26Request(http.MethodGet, fmt.Sprintf("%s%s", "/api/statements/", ID), nil)
 	ioutil.WriteFile(
 		fmt.Sprintf("%s.pdf", ID),
 		body,
 		0750,
 	)
+}
+
+func (auth *Client) BlockCard(ID string) {
+	_ = auth.n26Request(http.MethodPost, fmt.Sprintf("/api/cards/%s/block", ID), nil)
+	fmt.Printf("\nYour card with ID: %s is DISABLED\n\n", ID)
+}
+
+func (auth *Client) UnblockCard(ID string) {
+	_ = auth.n26Request(http.MethodPost, fmt.Sprintf("/api/cards/%s/unblock", ID), nil)
+	fmt.Printf("\nYour card with ID: %s is ACTIVE\n\n", ID)
 }
 
 func check(e error) {

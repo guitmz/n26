@@ -160,14 +160,17 @@ func main() {
 					for _, card := range *cards {
 						data = append(data,
 							[]string{
+								card.ID,
 								card.UsernameOnCard,
 								card.CardType,
 								card.CardProductType,
 								card.MaskedPan,
+								card.ExpirationDate.String(),
+								card.Status,
 							},
 						)
 					}
-					NewTableWriter().WriteData([]string{"Name on Card", "Type", "Product type", "Number"}, data)
+					NewTableWriter().WriteData([]string{"ID", "Name on Card", "Type", "Product type", "Number", "Expiration Date", "Status"}, data)
 				}
 				return nil
 			},
@@ -286,6 +289,28 @@ func main() {
 						NewTableWriter().WriteData([]string{"ID"}, data)
 					}
 				}
+				return nil
+			},
+		},
+		{
+			Name:      "block",
+			Usage:     "blocks a card",
+			ArgsUsage: "[card ID]",
+			Action: func(c *cli.Context) error {
+				API, err := authentication()
+				check(err)
+				API.BlockCard(c.Args().First())
+				return nil
+			},
+		},
+		{
+			Name:      "unblock",
+			Usage:     "unblocks a card",
+			ArgsUsage: "[card ID]",
+			Action: func(c *cli.Context) error {
+				API, err := authentication()
+				check(err)
+				API.UnblockCard(c.Args().First())
 				return nil
 			},
 		},
