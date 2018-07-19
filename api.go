@@ -347,7 +347,7 @@ func (auth *Client) GetStatements(retType string) (string, *Statements) {
 }
 
 func (auth *Client) GetStatementPDF(ID string) {
-	body := auth.n26Request(http.MethodGet, fmt.Sprintf("%s%s", "/api/statements/", ID), nil)
+	body := auth.n26Request(http.MethodGet, fmt.Sprintf("/api/statements/%s", ID), nil)
 	ioutil.WriteFile(
 		fmt.Sprintf("%s.pdf", ID),
 		body,
