@@ -14,6 +14,10 @@ import (
 	"github.com/urfave/cli"
 )
 
+const (
+	appVersion = "1.4.2"
+)
+
 func check(e error) {
 	if e != nil {
 		panic(e)
@@ -33,7 +37,7 @@ func authentication() (*n26.Client, error) {
 		check(err)
 		password = string(maskedPass)
 	}
-	return n26.NewClient(n26.Auth{username, password})
+	return n26.NewClient(n26.Auth{UserName: username, Password: password})
 }
 
 // Interface for generic data writer that has a header and data table e.g. table writer and csv writer
@@ -46,7 +50,7 @@ type transactionWriter interface {
 
 func main() {
 	app := cli.NewApp()
-	app.Version = "1.4.1"
+	app.Version = appVersion
 	app.UsageText = "n26 command [json|csv|statement ID]"
 	app.Name = "N26"
 	app.Usage = "your N26 Bank financial information on the command line"
@@ -156,14 +160,17 @@ func main() {
 					for _, card := range *cards {
 						data = append(data,
 							[]string{
+								card.ID,
 								card.UsernameOnCard,
 								card.CardType,
 								card.CardProductType,
 								card.MaskedPan,
+								card.ExpirationDate.String(),
+								card.Status,
 							},
 						)
 					}
-					NewTableWriter().WriteData([]string{"Name on Card", "Type", "Product type", "Number"}, data)
+					NewTableWriter().WriteData([]string{"ID", "Name on Card", "Type", "Product type", "Number", "Expiration Date", "Status"}, data)
 				}
 				return nil
 			},
@@ -282,6 +289,28 @@ func main() {
 						NewTableWriter().WriteData([]string{"ID"}, data)
 					}
 				}
+				return nil
+			},
+		},
+		{
+			Name:      "block",
+			Usage:     "blocks a card",
+			ArgsUsage: "[card ID]",
+			Action: func(c *cli.Context) error {
+				API, err := authentication()
+				check(err)
+				API.BlockCard(c.Args().First())
+				return nil
+			},
+		},
+		{
+			Name:      "unblock",
+			Usage:     "unblocks a card",
+			ArgsUsage: "[card ID]",
+			Action: func(c *cli.Context) error {
+				API, err := authentication()
+				check(err)
+				API.UnblockCard(c.Args().First())
 				return nil
 			},
 		},
