@@ -13,6 +13,7 @@ func NewCsvWriter(target io.Writer) (*csvWriter, error) {
 	writer := csv.NewWriter(target)
 	return &csvWriter{writer}, nil
 }
+
 func (w *csvWriter) WriteData(header []string, data [][]string) error {
 	if err := w.Write(header); err != nil {
 		return err
