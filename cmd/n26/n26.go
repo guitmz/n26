@@ -69,7 +69,7 @@ func main() {
 				} else {
 					available := strconv.FormatFloat(balance.AvailableBalance, 'f', -1, 64)
 					usable := strconv.FormatFloat(balance.UsableBalance, 'f', -1, 64)
-					data := [][]string{[]string{balance.IBAN, balance.BIC, available, usable}}
+					data := [][]string{{balance.IBAN, balance.BIC, available, usable}}
 					NewTableWriter().WriteData([]string{"IBAN", "BIC", "Available Balance", "Usable Balance"}, data)
 				}
 				return nil
@@ -85,7 +85,7 @@ func main() {
 				if prettyJSON != "" {
 					fmt.Println(prettyJSON)
 				} else {
-					data := [][]string{[]string{fmt.Sprintf("%s %s", info.FirstName, info.LastName), info.Email, info.MobilePhoneNumber}}
+					data := [][]string{{fmt.Sprintf("%s %s", info.FirstName, info.LastName), info.Email, info.MobilePhoneNumber}}
 					NewTableWriter().WriteData([]string{"Full Name", "Email", "Mobile Phone Number"}, data)
 				}
 				return nil
@@ -102,7 +102,7 @@ func main() {
 					fmt.Println(prettyJSON)
 				} else {
 					data := [][]string{
-						[]string{
+						{
 							time.Unix(status.Created, 0).String(),
 						},
 					}
