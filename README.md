@@ -83,7 +83,6 @@ You can run `n26 help` for usage description.
 
 # Missing features
 - Make a transfer
-- Block/unblock cards
 - Set card limit
 - API docs
 - Better error handling
