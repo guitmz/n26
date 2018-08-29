@@ -187,6 +187,27 @@ type Statements []struct {
 	Year      int    `json:"year"`
 }
 
+type Spaces struct {
+	Spaces []struct {
+		Balance struct {
+			AvailableBalance float64     `json:"availableBalance"`
+			OverdraftAmount  interface{} `json:"overdraftAmount"`
+		} `json:"balance"`
+		Color          string      `json:"color"`
+		Goal           interface{} `json:"goal"`
+		ID             string      `json:"id"`
+		ImageURL       string      `json:"imageUrl"`
+		IsCardAttached bool        `json:"isCardAttached"`
+		IsPrimary      bool        `json:"isPrimary"`
+		Name           string      `json:"name"`
+	} `json:"spaces"`
+	TotalBalance float64 `json:"totalBalance"`
+	UserFeatures struct {
+		AvailableSpaces int  `json:"availableSpaces"`
+		CanUpgrade      bool `json:"canUpgrade"`
+	} `json:"userFeatures"`
+}
+
 type Client http.Client
 
 func NewClient(a Auth) (*Client, error) {
@@ -363,6 +384,17 @@ func (auth *Client) BlockCard(ID string) {
 func (auth *Client) UnblockCard(ID string) {
 	_ = auth.n26Request(http.MethodPost, fmt.Sprintf("/api/cards/%s/unblock", ID), nil)
 	fmt.Printf("\nYour card with ID: %s is ACTIVE\n\n", ID)
+}
+
+func (auth *Client) GetSpaces(retType string) (string, *Spaces) {
+	body := auth.n26Request(http.MethodGet, "/api/spaces", nil)
+	spaces := &Spaces{}
+	check(json.Unmarshal(body, &spaces))
+	identedJSON, _ := json.MarshalIndent(&spaces, "", "  ")
+	if retType == "json" {
+		return string(identedJSON), spaces
+	}
+	return "", spaces
 }
 
 func check(e error) {
