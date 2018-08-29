@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	appVersion = "1.4.2"
+	appVersion = "1.4.3"
 )
 
 func check(e error) {
@@ -311,6 +311,32 @@ func main() {
 				API, err := authentication()
 				check(err)
 				API.UnblockCard(c.Args().First())
+				return nil
+			},
+		},
+		{
+			Name:  "spaces",
+			Usage: "your spaces",
+			Action: func(c *cli.Context) error {
+				API, err := authentication()
+				check(err)
+				prettyJSON, spaces := API.GetSpaces(c.Args().First())
+				if prettyJSON != "" {
+					fmt.Println(prettyJSON)
+				} else {
+					data := [][]string{}
+					for _, space := range spaces.Spaces {
+						data = append(data,
+							[]string{
+								space.Name,
+								strconv.FormatFloat(space.Balance.AvailableBalance, 'f', -1, 64),
+							},
+						)
+					}
+					fmt.Printf("\nYour total balance is: %s\n", strconv.FormatFloat(spaces.TotalBalance, 'f', -1, 64))
+					fmt.Printf("You still have %d available spaces to create and use\n\n", spaces.UserFeatures.AvailableSpaces)
+					NewTableWriter().WriteData([]string{"Name", "Balance"}, data)
+				}
 				return nil
 			},
 		},

@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/olekukonko/tablewriter"
 	"os"
+
+	"github.com/olekukonko/tablewriter"
 )
 
 type tblWriter struct {
@@ -12,6 +13,7 @@ type tblWriter struct {
 func NewTableWriter() *tblWriter {
 	return &tblWriter{tablewriter.NewWriter(os.Stdout)}
 }
+
 func (table *tblWriter) WriteData(header []string, data [][]string) error {
 	table.SetHeader(header)
 	table.AppendBulk(data)
