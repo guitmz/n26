@@ -334,15 +334,17 @@ func (auth *Client) GetContacts(retType string) (string, *Contacts) {
 	return "", contacts
 }
 
-func (auth *Client) GetLastTransactions() (*Transactions, error) {
-	return auth.GetTransactions(TimeStamp{}, TimeStamp{})
+func (auth *Client) GetLastTransactions(limit string) (*Transactions, error) {
+	return auth.GetTransactions(TimeStamp{}, TimeStamp{}, limit)
 }
 
 // Get transactions for the given time window.
 // Use the zero values for the time stamps if no restrictions are
 // desired (use the defaults on the server)
-func (auth *Client) GetTransactions(from, to TimeStamp) (*Transactions, error) {
-	params := map[string]string{}
+func (auth *Client) GetTransactions(from, to TimeStamp, limit string) (*Transactions, error) {
+	params := map[string]string{
+		"limit": limit,
+	}
 	//Filter is applied only if both values are set
 	if !from.IsZero() && !to.IsZero() {
 		params["from"] = fmt.Sprint(from.AsMillis())

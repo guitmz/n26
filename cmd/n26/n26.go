@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	appVersion = "1.4.3"
+	appVersion = "1.4.4"
 )
 
 func check(e error) {
@@ -231,6 +231,7 @@ func main() {
 			Usage:     "list your past transactions. Supports CSV output",
 			ArgsUsage: "[csv|json|table]",
 			Flags: []cli.Flag{
+				cli.StringFlag{Name: "limit", Value: "10", Usage: "retrieve last N transactions. Default to 10."},
 				cli.StringFlag{Name: "from", Usage: "retrieve transactions from this date. " +
 					"Also 'to' flag needs to be set. Calendar date in the format yyyy-mm-dd. E.g. 2018-03-01"},
 				cli.StringFlag{Name: "to", Usage: "retrieve transactions until this date. " +
@@ -242,6 +243,7 @@ func main() {
 				check(err)
 				writer, err := getTransactionWriter(c.Args().First())
 				check(err)
+				limit := c.String("limit")
 				var transactions *n26.Transactions
 				if c.IsSet("from") && c.IsSet("to") {
 					var from, to n26.TimeStamp
@@ -249,9 +251,9 @@ func main() {
 					check(err)
 					to.Time, err = time.Parse(dateFormat, c.String("to"))
 					check(err)
-					transactions, err = API.GetTransactions(from, to)
+					transactions, err = API.GetTransactions(from, to, limit)
 				} else {
-					transactions, err = API.GetLastTransactions()
+					transactions, err = API.GetLastTransactions(limit)
 				}
 				check(err)
 
