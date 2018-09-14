@@ -26,10 +26,10 @@ NAME:
    N26 - your N26 Bank financial information on the command line
 
 USAGE:
-   n26 command [json|statement ID]
+   n26 command [json|csv|statement ID]
 
 VERSION:
-   1.4.1
+   1.4.4
 
 AUTHOR:
    Guilherme Thomazi <thomazi@linux.com>
@@ -37,13 +37,16 @@ AUTHOR:
 COMMANDS:
      addresses     addresses linked to your account
      balance       your balance information
+     block         blocks a card
      cards         list your cards information
      contacts      your saved contacts
      info          personal information
      limits        your account limits
-     statements    your statements
+     spaces        your spaces
+     statements    your statements. Passing the statement ID as argument, downloads the PDF to the current directory
      status        general status of your account
-     transactions  your past transactions
+     transactions  list your past transactions. Supports CSV output
+     unblock       unblocks a card
      help, h       Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
