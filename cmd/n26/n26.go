@@ -228,8 +228,8 @@ func main() {
 		},
 		{
 			Name:      "transactions",
-			Usage:     "list your past transactions. Supports CSV output",
-			ArgsUsage: "[csv|json|table]",
+			Usage:     "list your past transactions. Supports CSV output.",
+			ArgsUsage: "[csv|json|table|smartcsv]",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "limit", Value: "10", Usage: "retrieve last N transactions. Default to 10."},
 				cli.StringFlag{Name: "from", Usage: "retrieve transactions from this date. " +
@@ -239,18 +239,32 @@ func main() {
 			},
 			Action: func(c *cli.Context) (err error) {
 				const dateFormat = "2006-01-02"
+				var from, to n26.TimeStamp
+				if c.IsSet("from") {
+					from.Time, err = time.Parse(dateFormat, c.String("from"))
+					check(err)
+				}
+				if c.IsSet("to") {
+					to.Time, err = time.Parse(dateFormat, c.String("to"))
+					check(err)
+				}
 				API, err := authentication()
 				check(err)
+
+				if c.Args().First() == "smartcsv" {
+					if from.IsZero() || to.IsZero() {
+						fmt.Println("Start and end time must be set for smart CSV!")
+						return nil
+					}
+					err = API.GetSmartStatementCsv(from, to)
+					fmt.Println("Report saved as smrt_statement.csv.")
+					return
+				}
 				writer, err := getTransactionWriter(c.Args().First())
 				check(err)
 				limit := c.String("limit")
 				var transactions *n26.Transactions
-				if c.IsSet("from") && c.IsSet("to") {
-					var from, to n26.TimeStamp
-					from.Time, err = time.Parse(dateFormat, c.String("from"))
-					check(err)
-					to.Time, err = time.Parse(dateFormat, c.String("to"))
-					check(err)
+				if !from.IsZero() && !to.IsZero() {
 					transactions, err = API.GetTransactions(from, to, limit)
 				} else {
 					transactions, err = API.GetLastTransactions(limit)
