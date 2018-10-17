@@ -249,6 +249,7 @@ func (c *Client) n26RawRequest(requestMethod, endpoint string, params map[string
 	defer res.Body.Close()
 	return callback(res.Body)
 }
+
 func (c *Client) n26Request(requestMethod, endpoint string, params map[string]string) []byte {
 	var body []byte
 	err := c.n26RawRequest(requestMethod, endpoint, params, func(r io.Reader) error {
