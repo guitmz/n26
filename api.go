@@ -3,10 +3,13 @@ package n26
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 
 	"golang.org/x/oauth2"
 )
@@ -224,7 +227,7 @@ func NewClient(a Auth) (*Client, error) {
 	return (*Client)(c.Client(ctx, tok)), nil
 }
 
-func (c *Client) n26Request(requestMethod, endpoint string, params map[string]string) []byte {
+func (c *Client) n26RawRequest(requestMethod, endpoint string, params map[string]string, callback func(io.Reader) error) error {
 	var req *http.Request
 	var err error
 
@@ -244,7 +247,15 @@ func (c *Client) n26Request(requestMethod, endpoint string, params map[string]st
 	res, err := (*http.Client)(c).Do(req)
 	check(err)
 	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
+	return callback(res.Body)
+}
+func (c *Client) n26Request(requestMethod, endpoint string, params map[string]string) []byte {
+	var body []byte
+	err := c.n26RawRequest(requestMethod, endpoint, params, func(r io.Reader) error {
+		var err error
+		body, err = ioutil.ReadAll(r)
+		return err
+	})
 	check(err)
 	return body
 }
@@ -356,6 +367,23 @@ func (auth *Client) GetTransactions(from, to TimeStamp, limit string) (*Transact
 		return nil, err
 	}
 	return transactions, nil
+}
+
+// Get transactions for the given time window as N26 CSV file. Stored as 'smrt_statement.csv'
+func (auth *Client) GetSmartStatementCsv(from, to TimeStamp) error {
+	//Filter is applied only if both values are set
+	if from.IsZero() || to.IsZero() {
+		return errors.New("Start and end time must be set")
+	}
+	return auth.n26RawRequest(http.MethodGet, fmt.Sprintf("/api/smrt/reports/%v/%v/statements", from.AsMillis(), to.AsMillis()), nil, func(r io.Reader) error {
+		file, err := os.Create("smrt_statement.csv")
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		_, err = io.Copy(file, r)
+		return err
+	})
 }
 
 func (auth *Client) GetStatements(retType string) (string, *Statements) {
