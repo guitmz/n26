@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"strconv"
@@ -256,8 +257,10 @@ func main() {
 						fmt.Println("Start and end time must be set for smart CSV!")
 						return nil
 					}
-					err = API.GetSmartStatementCsv(from, to)
-					fmt.Println("Report saved as smrt_statement.csv.")
+					err = API.GetSmartStatementCsv(from, to, func(r io.Reader) error {
+						_, err := io.Copy(os.Stdout, r)
+						return err
+					})
 					return
 				}
 				writer, err := getTransactionWriter(c.Args().First())
