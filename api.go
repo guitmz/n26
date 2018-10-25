@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 
 	"golang.org/x/oauth2"
 )
@@ -371,20 +370,12 @@ func (auth *Client) GetTransactions(from, to TimeStamp, limit string) (*Transact
 }
 
 // Get transactions for the given time window as N26 CSV file. Stored as 'smrt_statement.csv'
-func (auth *Client) GetSmartStatementCsv(from, to TimeStamp) error {
+func (auth *Client) GetSmartStatementCsv(from, to TimeStamp, reader func (io.Reader) error) error {
 	//Filter is applied only if both values are set
 	if from.IsZero() || to.IsZero() {
 		return errors.New("Start and end time must be set")
 	}
-	return auth.n26RawRequest(http.MethodGet, fmt.Sprintf("/api/smrt/reports/%v/%v/statements", from.AsMillis(), to.AsMillis()), nil, func(r io.Reader) error {
-		file, err := os.Create("smrt_statement.csv")
-		if err != nil {
-			return err
-		}
-		defer file.Close()
-		_, err = io.Copy(file, r)
-		return err
-	})
+	return auth.n26RawRequest(http.MethodGet, fmt.Sprintf("/api/smrt/reports/%v/%v/statements", from.AsMillis(), to.AsMillis()), nil, reader)
 }
 
 func (auth *Client) GetStatements(retType string) (string, *Statements) {
