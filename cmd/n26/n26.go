@@ -104,7 +104,7 @@ func main() {
 				} else {
 					data := [][]string{
 						{
-							time.Unix(status.Created, 0).String(),
+							time.Unix(status.Created/1000, 0).String(),
 						},
 					}
 					NewTableWriter().WriteData([]string{"Created"}, data)
