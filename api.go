@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 )
 
@@ -223,7 +224,21 @@ func NewClient(a Auth) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	b, err := json.Marshal(tok)
+	check(err)
+	viper.Set("token", string(b))
+
 	return (*Client)(c.Client(ctx, tok)), nil
+}
+
+func NewClientWithToken(tok *oauth2.Token) (*Client, error) {
+	c := oauth2.Config{
+		ClientID:     "android",
+		ClientSecret: "secret",
+		Endpoint:     oauth2.Endpoint{TokenURL: apiURL + "/oauth/token"},
+	}
+	return (*Client)(c.Client(context.Background(), tok)), nil
 }
 
 func (c *Client) n26RawRequest(requestMethod, endpoint string, params map[string]string, callback func(io.Reader) error) error {
@@ -370,7 +385,7 @@ func (auth *Client) GetTransactions(from, to TimeStamp, limit string) (*Transact
 }
 
 // Get transactions for the given time window as N26 CSV file. Stored as 'smrt_statement.csv'
-func (auth *Client) GetSmartStatementCsv(from, to TimeStamp, reader func (io.Reader) error) error {
+func (auth *Client) GetSmartStatementCsv(from, to TimeStamp, reader func(io.Reader) error) error {
 	//Filter is applied only if both values are set
 	if from.IsZero() || to.IsZero() {
 		return errors.New("Start and end time must be set")

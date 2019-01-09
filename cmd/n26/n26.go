@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -12,7 +13,9 @@ import (
 
 	"github.com/guitmz/n26"
 	"github.com/howeyc/gopass"
+	"github.com/spf13/viper"
 	"github.com/urfave/cli"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -26,12 +29,19 @@ func check(e error) {
 }
 
 func authentication() (*n26.Client, error) {
-	username := os.Getenv("N26_USERNAME")
+	token := viper.GetString("token")
+	if token != "" {
+		var tok *oauth2.Token
+		err := json.Unmarshal([]byte(token), &tok)
+		check(err)
+		return n26.NewClientWithToken(tok)
+	}
+	username := viper.GetString("username")
 	if username == "" {
 		fmt.Print("N26 username: ")
 		fmt.Scanln(&username)
 	}
-	password := os.Getenv("N26_PASSWORD")
+	password := viper.GetString("password")
 	if password == "" {
 		fmt.Print("N26 password: ")
 		maskedPass, err := gopass.GetPasswdMasked()
@@ -50,6 +60,15 @@ type transactionWriter interface {
 }
 
 func main() {
+	viper.SetEnvPrefix("n26")
+	viper.BindEnv("username")
+	viper.BindEnv("password")
+
+	viper.SetConfigName("config")
+	viper.AddConfigPath("$HOME/.n26")
+	viper.AddConfigPath(".")
+	viper.ReadInConfig()
+
 	app := cli.NewApp()
 	app.Version = appVersion
 	app.UsageText = "n26 command [json|csv|statement ID]"
@@ -364,6 +383,8 @@ func main() {
 	sort.Sort(cli.CommandsByName(app.Commands))
 	err := app.Run(os.Args)
 	check(err)
+
+	viper.WriteConfig()
 }
 
 func getTransactionWriter(outType string) (transactionWriter, error) {
