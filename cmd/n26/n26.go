@@ -34,7 +34,13 @@ func authentication() (*n26.Client, error) {
 		var tok *oauth2.Token
 		err := json.Unmarshal([]byte(token), &tok)
 		check(err)
-		return n26.NewClientWithToken(tok)
+		client, err := n26.NewClientWithToken(tok)
+		check(err)
+		// validate if token works properly
+		_, info := client.GetInfo("")
+		if info.ID != "" {
+			return client, nil
+		}
 	}
 	username := viper.GetString("username")
 	if username == "" {
