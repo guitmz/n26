@@ -12,11 +12,12 @@ builds:
    - freebsd
   goarch:
     - amd64
-archive:
-  name_template: "{{ .ProjectName }}-cli-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
-  format: zip
-  files:
-  - none*
+archives:
+  - id: zip
+    name_template: "{{ .ProjectName }}-cli-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    format: zip
+    files:
+    - none*
 checksum:
   name_template: "checksums.txt"
 release:
@@ -31,13 +32,14 @@ changelog:
     - "typo"
     - "^docs:"
     - "^test:"
-brew:
-  github:
-    owner: guitmz
-    name: homebrew-tools
+brews:
+  -
+   github:
+     owner: guitmz
+     name: homebrew-tools
 
-  homepage: "https://github.com/guitmz/n26"
-  description: "CLI tool for N26 Bank"
-  test: |
-    system "#{bin}/n26", "--version"
+   homepage: "https://github.com/guitmz/n26"
+   description: "CLI tool for N26 Bank"
+   test: |
+     system "#{bin}/n26", "--version"
 
