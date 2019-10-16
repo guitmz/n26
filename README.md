@@ -20,6 +20,9 @@ or if you want to be asked for your credentials:
 
 `$ docker run -ti guitmz/n26`
 
+# Authentication
+Since 14th of September 2019, N26 requires a login confirmation (2 factor authentication) from the paired phone N26 application to login on devices that are not paired (more details [here](https://n26.com/en-eu/blog/what-is-psd2)). This means you will receive a notification on your phone when you start using this library to request data. This tool checks for your login confirmation every 5 seconds. If you fail to approve the login request within 60 seconds an exception is raised.
+
 # Usage
 ```
 NAME:
@@ -29,7 +32,7 @@ USAGE:
    n26 command [json|csv|statement ID]
 
 VERSION:
-   1.4.4
+   1.4.8
 
 AUTHOR:
    Guilherme Thomazi <thomazi@linux.com>
@@ -85,9 +88,15 @@ And `csv` for transactions.
 You can run `n26 help` for usage description.
 
 # Missing features
+- Improve MFA flow, for now it works but is not really informative
 - Make a transfer
 - Set card limit
 - API docs
 - Better error handling
 - A terminal UI could also be implemented
 - ?
+
+# References
+- https://github.com/femueller/python-n26 (MFA reference)
+- https://github.com/PierrickP/n26 (API reference)
+- https://github.com/Rots (thank you for the PRs!)
