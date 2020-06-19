@@ -32,7 +32,7 @@ USAGE:
    n26 command [json|csv|statement ID]
 
 VERSION:
-   1.4.8
+   1.4.9
 
 AUTHOR:
    Guilherme Thomazi <thomazi@linux.com>
