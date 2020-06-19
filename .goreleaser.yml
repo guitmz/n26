@@ -2,6 +2,7 @@
 # Make sure to check the documentation at http://goreleaser.com
 builds:
 - env:
+  - GO111MODULE=on
   - CGO_ENABLED=0
   main: ./cmd/n26
   binary: n26
