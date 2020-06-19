@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	appVersion = "1.4.8"
+	appVersion = "1.4.9"
 )
 
 func check(e error) {

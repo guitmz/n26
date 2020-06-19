@@ -32,7 +32,7 @@ func (t *Token) GetMFAToken(username, password string) error {
 	data.Set("username", username)
 	data.Set("password", password)
 
-	path := "/oauth/token"
+	path := "/oauth/token/"
 	req, err := createRequest(path, strings.NewReader(data.Encode()))
 	check(err)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
