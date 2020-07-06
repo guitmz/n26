@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func createRequest(path string, body io.Reader) (*http.Request, error) {
+func createRequest(path, deviceToken string, body io.Reader) (*http.Request, error) {
 	u, _ := url.ParseRequestURI(apiURL)
 	u.Path = path
 	urlStr := fmt.Sprintf("%v", u)
@@ -23,17 +23,18 @@ func createRequest(path string, body io.Reader) (*http.Request, error) {
 		return nil, err
 	}
 	req.Header.Set("Authorization", "Basic YW5kcm9pZDpzZWNyZXQ=")
+	req.Header.Set("device-token", deviceToken)
 	return req, nil
 }
 
-func (t *Token) GetMFAToken(username, password string) error {
+func (t *Token) GetMFAToken(username, password, deviceToken string) error {
 	data := url.Values{}
 	data.Set("grant_type", "password")
 	data.Set("username", username)
 	data.Set("password", password)
 
-	path := "/oauth/token/"
-	req, err := createRequest(path, strings.NewReader(data.Encode()))
+	path := "/oauth2/token/"
+	req, err := createRequest(path, deviceToken, strings.NewReader(data.Encode()))
 	check(err)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
@@ -51,7 +52,7 @@ func (t *Token) GetMFAToken(username, password string) error {
 	return nil
 }
 
-func (t *Token) requestMfaApproval() error {
+func (t *Token) requestMfaApproval(deviceToken string) error {
 	data, err := json.Marshal(map[string]string{
 		"challengeType": "oob",
 		"mfaToken":      t.MfaToken,
@@ -59,7 +60,7 @@ func (t *Token) requestMfaApproval() error {
 	check(err)
 
 	path := "/api/mfa/challenge"
-	req, err := createRequest(path, bytes.NewBuffer(data))
+	req, err := createRequest(path, deviceToken, bytes.NewBuffer(data))
 	check(err)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.86 Safari/537.36")
@@ -67,13 +68,14 @@ func (t *Token) requestMfaApproval() error {
 	res, err := http.DefaultClient.Do(req)
 	check(err)
 	if res.StatusCode != 201 {
+		fmt.Println(res.StatusCode)
 		return errors.New("Failed to request MFA approval")
 	}
 
 	// retries 12 times every 5 seconds (60 seconds total wait time)
 	// until the login is approved in a authorized device (like the users phone)
 	for i := 0; i <= 12; i++ {
-		status := t.CompleteMfaApproval()
+		status := t.CompleteMfaApproval(deviceToken)
 		if status == 400 {
 			time.Sleep(5 * time.Second)
 		} else {
@@ -83,13 +85,13 @@ func (t *Token) requestMfaApproval() error {
 	return nil
 }
 
-func (t *Token) CompleteMfaApproval() int {
+func (t *Token) CompleteMfaApproval(deviceToken string) int {
 	data := url.Values{}
 	data.Set("grant_type", "mfa_oob")
 	data.Set("mfaToken", t.MfaToken)
 
-	path := "/oauth/token"
-	req, err := createRequest(path, strings.NewReader(data.Encode()))
+	path := "/oauth2/token"
+	req, err := createRequest(path, deviceToken, strings.NewReader(data.Encode()))
 	check(err)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 

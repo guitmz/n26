@@ -15,8 +15,9 @@ import (
 const apiURL = "https://api.tech26.de"
 
 type Auth struct {
-	UserName string
-	Password string
+	UserName    string
+	Password    string
+	DeviceToken string
 }
 
 type Balance struct {
@@ -225,9 +226,9 @@ func (t *TokenSource) Token() (*oauth2.Token, error) {
 
 func NewClient(a Auth) (*Client, error) {
 	token := &Token{}
-	err := token.GetMFAToken(a.UserName, a.Password)
+	err := token.GetMFAToken(a.UserName, a.Password, a.DeviceToken)
 	check(err)
-	err = token.requestMfaApproval()
+	err = token.requestMfaApproval(a.DeviceToken)
 	check(err)
 
 	tokenSource := &TokenSource{
