@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	appVersion = "1.4.9"
+	appVersion = "1.5.0"
 )
 
 func check(e error) {
@@ -38,7 +38,12 @@ func authentication() (*n26.Client, error) {
 		check(err)
 		password = string(maskedPass)
 	}
-	return n26.NewClient(n26.Auth{UserName: username, Password: password})
+	deviceToken := os.Getenv("N26_DEVICE_TOKEN")
+	if password == "" {
+		fmt.Print("N26 device token (must be in uuid format): ")
+		fmt.Scanln(&deviceToken)
+	}
+	return n26.NewClient(n26.Auth{UserName: username, Password: password, DeviceToken: deviceToken})
 }
 
 // Interface for generic data writer that has a header and data table e.g. table writer and csv writer
