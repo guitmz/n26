@@ -39,7 +39,7 @@ func authentication() (*n26.Client, error) {
 		password = string(maskedPass)
 	}
 	deviceToken := os.Getenv("N26_DEVICE_TOKEN")
-	if password == "" {
+	if deviceToken == "" {
 		fmt.Print("N26 device token (must be in uuid format): ")
 		fmt.Scanln(&deviceToken)
 	}
