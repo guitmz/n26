@@ -292,25 +292,26 @@ func main() {
 				API, err := authentication()
 				check(err)
 				dateRegex := regexp.MustCompile("statement-[0-9][0-9][0-9][0-9]-(1[0-2]|0[1-9]|\\d)")
-				argument := c.Args().First()
-				switch {
-				case dateRegex.MatchString(argument):
-					API.GetStatementPDF(argument)
-					fmt.Println(fmt.Sprintf("[+] PDF file %s.pdf downloaded!", argument))
-				default:
-					prettyJSON, statements := API.GetStatements(argument)
-					if prettyJSON != "" {
-						fmt.Println(prettyJSON)
-					} else {
-						data := [][]string{}
-						for _, statement := range *statements {
-							data = append(data,
-								[]string{
-									statement.ID,
-								},
-							)
+				for _, argument := range c.Args() {
+					switch {
+					case dateRegex.MatchString(argument):
+						API.GetStatementPDF(argument)
+						fmt.Println(fmt.Sprintf("[+] PDF file %s.pdf downloaded!", argument))
+					default:
+						prettyJSON, statements := API.GetStatements(argument)
+						if prettyJSON != "" {
+							fmt.Println(prettyJSON)
+						} else {
+							data := [][]string{}
+							for _, statement := range *statements {
+								data = append(data,
+									[]string{
+										statement.ID,
+									},
+								)
+							}
+							NewTableWriter().WriteData([]string{"ID"}, data)
 						}
-						NewTableWriter().WriteData([]string{"ID"}, data)
 					}
 				}
 				return nil
