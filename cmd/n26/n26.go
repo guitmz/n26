@@ -286,7 +286,7 @@ func main() {
 		},
 		{
 			Name:      "statements",
-			Usage:     "your statements. Passing the statement ID as argument, downloads the PDF to the current directory",
+			Usage:     "your statements. Passing one or more space separated statement IDs as argument, downloads the PDF to the current directory",
 			ArgsUsage: "[statement ID]",
 			Action: func(c *cli.Context) error {
 				API, err := authentication()
