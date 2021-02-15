@@ -22,7 +22,7 @@ func createRequest(path, deviceToken string, body io.Reader) (*http.Request, err
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Basic YW5kcm9pZDpzZWNyZXQ=")
+	req.Header.Set("Authorization", "Basic bmF0aXZld2ViOg==")
 	req.Header.Set("device-token", deviceToken)
 	return req, nil
 }
