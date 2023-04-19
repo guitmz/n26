@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"sort"
 	"strconv"
@@ -16,12 +17,12 @@ import (
 )
 
 const (
-	appVersion = "1.5.5"
+	appVersion = "1.5.6"
 )
 
 func check(e error) {
 	if e != nil {
-		panic(e)
+		log.Fatal(e.Error())
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 
@@ -433,6 +434,6 @@ func (auth *Client) GetSpaces(retType string) (string, *Spaces) {
 
 func check(e error) {
 	if e != nil {
-		panic(e)
+		log.Fatal(e.Error())
 	}
 }
