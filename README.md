@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/guitmz/n26.svg?branch=master)](https://travis-ci.org/guitmz/n26) [![Go Report Card](https://goreportcard.com/badge/github.com/guitmz/n26)](https://goreportcard.com/report/github.com/guitmz/n26) [![](https://images.microbadger.com/badges/image/guitmz/n26.svg)](https://microbadger.com/images/guitmz/n26 "Get your own image badge on microbadger.com")
+[![Go Report Card](https://goreportcard.com/badge/github.com/guitmz/n26)](https://goreportcard.com/report/github.com/guitmz/n26) [![](https://images.microbadger.com/badges/image/guitmz/n26.svg)](https://microbadger.com/images/guitmz/n26 "Get your own image badge on microbadger.com")
 
 # n26
 Go API and CLI to get information of your N26 account
